@@ -18,7 +18,7 @@ public class SiteHostAppConfigurationProperties {
      * Base URL under which the sites are hosted...
      */
     @NotBlank
-    private String baseUrl = "/site";
+    private String baseUrl = "/site/*";
 
     private List<SiteConfig> sites;
 

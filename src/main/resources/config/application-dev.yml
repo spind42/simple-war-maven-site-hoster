@@ -4,10 +4,19 @@ server:
   port: 8044
 
 sitehoster:
-  temp-dir: target/tempdir
+  tempDir: target/tempdir
   sites:
     - name: s1
       git-source:
-        uri: https://github.com/e-codex/ecodex
-        branch-filter: gh-pages
+        uri: https://github.com/e-codex/ecodex.git
+        branches: gh-pages
+        default-ref: refs/remotes/origin/gh-pages
+#        branch-filter: gh-pages
+
+logging:
+  level:
+    at:
+      stsp:
+        dev: DEBUG
+
 

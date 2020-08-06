@@ -4,6 +4,7 @@ import lombok.Data;
 
 import javax.annotation.Resource;
 import javax.validation.constraints.NotBlank;
+import java.util.List;
 import java.util.regex.Pattern;
 
 @Data
@@ -20,6 +21,8 @@ public class GitConfig {
 
     private String privateKeyPassphrase;
 
-    private Pattern branchFilter = Pattern.compile("master");
+    private List<String> branches;
+
+    private String defaultRef = "gh-pages";
 
 }
