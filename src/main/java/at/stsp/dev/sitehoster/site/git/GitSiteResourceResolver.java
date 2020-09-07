@@ -8,10 +8,16 @@ import at.stsp.dev.sitehoster.site.configuration.GitConfig;
 import at.stsp.dev.sitehoster.site.configuration.SiteConfig;
 import at.stsp.dev.sitehoster.site.configuration.SiteHostAppConfigurationProperties;
 
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.TransportConfigCallback;
+import org.eclipse.jgit.errors.UnsupportedCredentialItem;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
@@ -19,8 +25,10 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
+import org.eclipse.jgit.util.FS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -152,11 +160,30 @@ public class GitSiteResourceResolver implements SiteResourceResolver, SiteResour
             Path gitRepoConfigDir = repoHostDir.resolve(".git");
             if (!Files.exists(gitRepoConfigDir)) {
                 log.debug("Repo under [{}] does not exist - cloning branches [{}] from [{}]", gitRepoConfigDir, gitSource.getBranches(), gitSource.getUri());
-                Git call = Git.cloneRepository()
+                CloneCommand cloneCommandBuilder = Git.cloneRepository()
                         .setURI(siteConfig.getGitSource().getUri())
                         .setDirectory(gitRepoConfigDir.toFile())
-                        .setBranchesToClone(gitSource.getBranches())
-                        .call();
+                        .setBranchesToClone(gitSource.getBranches());
+                if (!StringUtils.isEmpty(gitSource.getUsername())) {
+                    UsernamePasswordCredentialsProvider usernamePasswordCredentialsProvider =
+                            new UsernamePasswordCredentialsProvider(gitSource.getUsername(), gitSource.getPassword());
+                    cloneCommandBuilder.setCredentialsProvider(usernamePasswordCredentialsProvider);
+                } else if (gitSource.getPrivateKeyFile() != null) {
+
+                    cloneCommandBuilder.setTransportConfigCallback( new TransportConfigCallback() {
+                        @Override
+                        public void configure( Transport transport ) {
+                            if (transport instanceof SshTransport) {
+                                SshTransport sshTransport = (SshTransport) transport;
+                                sshTransport.setSshSessionFactory(createSshSessionFactor(gitSource));
+                            }
+
+//                            sshTransport.setSshSessionFactory( sshSessionFactory );
+                        }
+                    } );
+
+                }
+                Git call =  cloneCommandBuilder.call();
             }
 
 //            for (String branchName : gitSource.getBranches()) {
@@ -167,7 +194,46 @@ public class GitSiteResourceResolver implements SiteResourceResolver, SiteResour
             log.error("An error has occured...", e);
         }
 
+    }
 
+    private SshSessionFactory createSshSessionFactor(GitConfig gitSource) {
+        Path sshKeyPath;
+        if (gitSource.getPrivateKeyFile() != null) {
+
+            try {
+                sshKeyPath = gitSource.getPrivateKeyFile().getFile().toPath();
+                sshKeyPath = sshKeyPath.toAbsolutePath();
+                log.debug("Using Private Key [{}]for ssh authentication", sshKeyPath);
+                if (!Files.exists(sshKeyPath)) {
+                    String error = String.format("The private key [%s] does not exist!", sshKeyPath);
+                    throw new IllegalArgumentException(error);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            final String sshKeyPathString = sshKeyPath.toString();
+            final SshSessionFactory sshSessionFactory = new JschConfigSessionFactory() {
+                @Override
+                protected void configure(OpenSshConfig.Host hc, Session session) {
+                    session.setConfig("StrictHostKeyChecking", "no");
+
+
+                    //session.setHostKeyAlias();
+                }
+
+                @Override
+                protected JSch createDefaultJSch(FS fs) throws JSchException {
+                    JSch jSch = super.createDefaultJSch(fs);
+                    jSch.addIdentity(sshKeyPathString, gitSource.getPrivateKeyPassphrase());
+
+                    return jSch;
+                }
+            };
+            return sshSessionFactory;
+
+        } else {
+            throw new IllegalArgumentException("SSH Key is null - but is not allowed to be null!");
+        }
     }
 
 

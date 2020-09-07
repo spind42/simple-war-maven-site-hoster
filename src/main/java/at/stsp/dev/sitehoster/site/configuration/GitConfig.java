@@ -1,8 +1,9 @@
 package at.stsp.dev.sitehoster.site.configuration;
 
 import lombok.Data;
+import org.springframework.core.io.Resource;
 
-import javax.annotation.Resource;
+
 import javax.validation.constraints.NotBlank;
 import java.util.List;
 import java.util.regex.Pattern;

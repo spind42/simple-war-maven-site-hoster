@@ -6,17 +6,26 @@ server:
 sitehoster:
   tempDir: target/tempdir
   sites:
-    - name: s1
+#    - name: s1
+#      git-source:
+#        uri: https://github.com/e-codex/ecodex.git
+#        branches: gh-pages
+#        default-ref: refs/remotes/origin/gh-pages
+
+    - name: s2
       git-source:
-        uri: https://github.com/e-codex/ecodex.git
-        branches: gh-pages
-        default-ref: refs/remotes/origin/gh-pages
-#        branch-filter: gh-pages
+        uri: ssh://github.com/spind42/test-repo.git
+        branches: master
+        default-ref: refs/remotes/origin/master
+        private-key-file: file://C:/Users/stephan/.ssh/test_rsa
+        privateKeyPassphrase: test
 
 logging:
   level:
     at:
       stsp:
         dev: DEBUG
-
+    org:
+      eclipse:
+        jgit: TRACE
 
