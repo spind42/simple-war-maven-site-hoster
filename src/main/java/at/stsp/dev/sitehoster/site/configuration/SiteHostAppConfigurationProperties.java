@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotBlank;
+import java.util.ArrayList;
 import java.util.List;
 
 @ConfigurationProperties(prefix = "sitehoster")
@@ -20,7 +21,7 @@ public class SiteHostAppConfigurationProperties {
     @NotBlank
     private String baseUrl = "/site/*";
 
-    private List<SiteConfig> sites;
+    private List<SiteConfig> sites = new ArrayList<>();
 
     @NotBlank
     private String tempDir = "./temp";

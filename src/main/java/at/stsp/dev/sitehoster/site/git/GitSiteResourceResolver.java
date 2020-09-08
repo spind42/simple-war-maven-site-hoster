@@ -174,8 +174,11 @@ public class GitSiteResourceResolver implements SiteResourceResolver, SiteResour
                         @Override
                         public void configure( Transport transport ) {
                             if (transport instanceof SshTransport) {
-                                SshTransport sshTransport = (SshTransport) transport;
-                                sshTransport.setSshSessionFactory(createSshSessionFactor(gitSource));
+                                SshSessionFactory sshSessionFactory = createSshSessionFactor(gitSource);
+                                log.debug("Setting ssh session factory to [{}]", sshSessionFactory);
+
+                                ((SshTransport) transport).setSshSessionFactory(sshSessionFactory);
+
                             }
 
 //                            sshTransport.setSshSessionFactory( sshSessionFactory );
@@ -191,7 +194,8 @@ public class GitSiteResourceResolver implements SiteResourceResolver, SiteResour
 //            }
 
         } catch (Exception  e) {
-            log.error("An error has occured...", e);
+//            log.error("An error has occured...", e);
+            throw new RuntimeException(e);
         }
 
     }
@@ -203,7 +207,7 @@ public class GitSiteResourceResolver implements SiteResourceResolver, SiteResour
             try {
                 sshKeyPath = gitSource.getPrivateKeyFile().getFile().toPath();
                 sshKeyPath = sshKeyPath.toAbsolutePath();
-                log.debug("Using Private Key [{}]for ssh authentication", sshKeyPath);
+                log.debug("Using Private Key [{}] for ssh authentication", sshKeyPath);
                 if (!Files.exists(sshKeyPath)) {
                     String error = String.format("The private key [%s] does not exist!", sshKeyPath);
                     throw new IllegalArgumentException(error);
@@ -211,11 +215,13 @@ public class GitSiteResourceResolver implements SiteResourceResolver, SiteResour
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            final String sshKeyPathString = sshKeyPath.toString();
+
+            final String sshKeyPathString = sshKeyPath.toAbsolutePath().toString();
             final SshSessionFactory sshSessionFactory = new JschConfigSessionFactory() {
                 @Override
                 protected void configure(OpenSshConfig.Host hc, Session session) {
                     session.setConfig("StrictHostKeyChecking", "no");
+                    log.debug("Server version [{}]", session.getServerVersion());
 
 
                     //session.setHostKeyAlias();
@@ -225,7 +231,7 @@ public class GitSiteResourceResolver implements SiteResourceResolver, SiteResour
                 protected JSch createDefaultJSch(FS fs) throws JSchException {
                     JSch jSch = super.createDefaultJSch(fs);
                     jSch.addIdentity(sshKeyPathString, gitSource.getPrivateKeyPassphrase());
-
+                    log.debug("setting ssh identity key: [{}]", sshKeyPathString);
                     return jSch;
                 }
             };
