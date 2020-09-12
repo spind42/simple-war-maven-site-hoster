@@ -17,6 +17,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.MountableFile;
 
 
+import java.nio.file.Paths;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith({SpringExtension.class})
@@ -31,6 +33,7 @@ class GitSiteResourceResolverITCase {
     private static final GenericContainer SSH_KEY_GIT_CONTAINER = new GenericContainer("spind42/test-git-repo:latest")
 //        .withFileSystemBind("src/test/resources/ssh/", "/git-server/keys/", BindMode.READ_ONLY)
             .withCopyFileToContainer(MountableFile.forClasspathResource("/ssh/ssh-key1.pub"), "/git-server/keys/ssh-key1.pub")
+            .withCopyFileToContainer(MountableFile.forHostPath(Paths.get("~/.ssh/gitkey_rsa.pub")), "/git-server/keys/gitkey.pub")
         .withCommand("/bin/sh /git-server/start.sh");
 
 
@@ -42,7 +45,9 @@ class GitSiteResourceResolverITCase {
         siteConfig.setName("st1");
         GitConfig gitConfig = new GitConfig();
         gitConfig.setPrivateKeyFile(new ClassPathResource("/ssh/ssh-key1"));
-        String gitUri = String.format("ssh://git@%s/git-server/repos/test1.git", SSH_KEY_GIT_CONTAINER.getContainerIpAddress());
+        Integer sshPort = SSH_KEY_GIT_CONTAINER.getMappedPort(22);
+        String dockerHost = SSH_KEY_GIT_CONTAINER.getHost();
+        String gitUri = String.format("ssh://git@%s:%s/git-server/repos/test1.git", dockerHost, sshPort );
         gitConfig.setUri(gitUri);
         siteConfig.setGitSource(gitConfig);
 
