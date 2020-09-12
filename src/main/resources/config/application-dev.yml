@@ -12,13 +12,13 @@ sitehoster:
 #        branches: gh-pages
 #        default-ref: refs/remotes/origin/gh-pages
 
-    - name: s4
+    - name: s2
       git-source:
-        uri: ssh://git@git.brz.gv.at:7999/jeumv/eumv_eugw_interface_site.git
+        uri: ssh://github.com/spind42/test-repo.git
         branches: master
         default-ref: refs/remotes/origin/master
-        private-key-file: file://C:/Users/spindlest/.ssh/test2key_rsa
-        privateKeyPassphrase: ""
+        private-key-file: file://C:/Users/spindlest/.ssh/test_rsa
+        privateKeyPassphrase: test
 
 logging:
   level:
