@@ -31,9 +31,13 @@ class GitSiteResourceResolverITCase {
 
     @Container
     private static final GenericContainer SSH_KEY_GIT_CONTAINER = new GenericContainer("spind42/test-git-repo:latest")
+//    private static final GenericContainer SSH_KEY_GIT_CONTAINER = new GenericContainer("jkarlos/git-server-docker")
+
+            .withCopyFileToContainer(MountableFile.forHostPath("~/.ssh/id_rsa.pub"), "/git-server/keys/id_rsa.pub")
+
 //        .withFileSystemBind("src/test/resources/ssh/", "/git-server/keys/", BindMode.READ_ONLY)
             .withCopyFileToContainer(MountableFile.forClasspathResource("/ssh/ssh-key1.pub"), "/git-server/keys/ssh-key1.pub")
-            .withCopyFileToContainer(MountableFile.forHostPath(Paths.get("~/.ssh/gitkey_rsa.pub")), "/git-server/keys/gitkey.pub")
+//            .withCopyFileToContainer(MountableFile.forHostPath(Paths.get("~/.ssh/gitkey_rsa.pub")), "/git-server/keys/gitkey.pub")
         .withCommand("/bin/sh /git-server/start.sh");
 
 
@@ -57,9 +61,9 @@ class GitSiteResourceResolverITCase {
 
     }
 
-    @Test
-    public void sleep() throws InterruptedException {
-        Thread.sleep(350000);
-    }
+//    @Test
+//    public void sleep() throws InterruptedException {
+//        Thread.sleep(350000);
+//    }
 
 }

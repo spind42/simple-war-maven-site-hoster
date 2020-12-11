@@ -221,7 +221,7 @@ public class GitSiteResourceResolver implements SiteResourceResolver, SiteResour
                 @Override
                 protected void configure(OpenSshConfig.Host hc, Session session) {
                     session.setConfig("StrictHostKeyChecking", "no");
-                    log.debug("Server version [{}]", session.getServerVersion());
+//                    log.debug("Server version [{}]", session.getServerVersion());
 
 
                     //session.setHostKeyAlias();

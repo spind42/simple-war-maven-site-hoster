@@ -17,7 +17,7 @@ sitehoster:
         uri: ssh://github.com/spind42/test-repo.git
         branches: master
         default-ref: refs/remotes/origin/master
-        private-key-file: file://C:/Users/spindlest/.ssh/test_rsa
+        private-key-file: file://C:/Users/stephan/.ssh/test_rsa
         privateKeyPassphrase: test
 
 logging:
